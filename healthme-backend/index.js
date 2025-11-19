@@ -22,11 +22,14 @@ const doctorRoutes = require('./routes/doctor');
 const aiRoutes = require('./routes/ai');
 const videoRoutes = require('./routes/video');
 
+const insuranceRoutes = require('./routes/insurance');
+
 app.use('/api/auth', authRoutes);
 app.use('/api/patient', patientRoutes);
 app.use('/api/doctor', doctorRoutes);
 app.use('/api/ai', aiRoutes);
 app.use('/api/video', videoRoutes);
+app.use('/api/insurance', insuranceRoutes);
 
 
 const __dirnameResolved = path.resolve();

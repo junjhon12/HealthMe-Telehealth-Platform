@@ -2,6 +2,7 @@ const User = require('../models/User');
 const Symptom = require('../models/Symptom');
 const Appointment = require('../models/Appointment');
 const Message = require('../models/Message');
+const Insurance = require('../models/Insurance');
 
 exports.getAllPatients = async (req, res) => {
   try {
@@ -84,4 +85,18 @@ exports.getAllDoctors = async (req, res) => {
     console.error(err.message);
     res.status(500).send('Server Error');
   }
+};
+
+exports.getPatientInsurance = async (req, res) => {
+    try {
+        console.log("🔎 Doctor looking for insurance...");
+        console.log("   Target Patient ID:", req.params.patientId);
+
+        const insurance = await Insurance.find({ patient: req.params.patientId }).sort({ createdAt: -1 });
+        console.log("   Found:", insurance.length, "policies");
+        res.json(insurance);
+    } catch (err) {
+        console.error(err.message);
+        res.status(500).send('Server Error');
+    }
 };

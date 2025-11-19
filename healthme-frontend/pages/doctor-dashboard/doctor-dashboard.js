@@ -223,15 +223,69 @@ async function selectPatient(patient) {
             <div class="patient-email-display">Patient ID: ${patient._id}</div>
         </div>
         <div class="info-grid">
-            <div class="info-item"><div class="info-label">Role</div><div class="info-value">Patient</div></div>
-            <div class="info-item"><div class="info-label">Registered</div><div class="info-value">${new Date(patient.createdAt || new Date()).toLocaleDateString()}</div></div>
+            <div class="info-item">
+                <div class="info-label">Role</div>
+                <div class="info-value">Patient</div>
+            </div>
+            <div class="info-item">
+                <div class="info-label">Registered</div>
+                <div class="info-value">${new Date(patient.createdAt || new Date()).toLocaleDateString()}</div>
+            </div>
+        </div>
+        
+        <div class="section-divider" style="margin: 20px 0; opacity: 0.5;"></div>
+        <div id="patient-insurance-info">
+            <p class="loading">Loading insurance details...</p>
         </div>
     `;
+    
     patientInfoContainer.innerHTML = patientInfoHTML;
-    await fetchPatientSymptoms(patient._id);
+    fetchPatientSymptoms(patient._id);
+    fetchPatientInsurance(patient._id);
+    
     showSection('patient-details');
     navLinks.forEach(l => l.classList.remove('active'));
     document.querySelector('[data-section="patient-details"]').classList.add('active');
+}
+
+async function fetchPatientInsurance(patientId) {
+    const token = localStorage.getItem('token');
+    const container = document.getElementById('patient-insurance-info');
+    
+    try {
+        const response = await fetch(`http://localhost:3000/api/doctor/patients/${patientId}/insurance`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+
+        if (response.ok) {
+            const policies = await response.json();
+            
+            if (policies.length === 0) {
+                container.innerHTML = '<p style="color: var(--text-secondary); font-size: 14px;">No insurance on file.</p>';
+                return;
+            }
+
+            // Render the policies nicely
+            container.innerHTML = policies.map(ins => `
+                <div style="background: rgba(99, 102, 241, 0.1); padding: 15px; border-radius: 8px; margin-bottom: 10px; border: 1px solid var(--accent);">
+                    <div style="font-weight: 600; color: var(--text-primary); font-size: 15px;">${ins.provider}</div>
+                    <div style="font-size: 13px; color: var(--text-secondary); margin-top: 4px;">
+                        Policy #: <span style="color: var(--text-primary);">${ins.policyNumber}</span>
+                    </div>
+                    ${ins.coverageDetails ? `
+                        <div style="font-size: 13px; color: var(--text-secondary); margin-top: 4px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 4px;">
+                            ${ins.coverageDetails}
+                        </div>
+                    ` : ''}
+                </div>
+            `).join('');
+        } else {
+            container.innerHTML = '<p class="loading error">Failed to load insurance.</p>';
+        }
+    } catch (error) {
+        console.error('Error fetching insurance:', error);
+        container.innerHTML = '<p class="loading error">Could not load insurance.</p>';
+    }
 }
 
 async function fetchPatientSymptoms(patientId) {
@@ -252,6 +306,7 @@ async function fetchPatientSymptoms(patientId) {
         historyList.innerHTML = '<p class="loading error">Could not load symptoms</p>';
     }
 }
+
 
 function displayPatientSymptoms(symptoms) {
     const historyList = document.getElementById('patient-symptoms-list');
