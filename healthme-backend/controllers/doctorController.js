@@ -3,6 +3,7 @@ const Symptom = require('../models/Symptom');
 const Appointment = require('../models/Appointment');
 const Message = require('../models/Message');
 const Insurance = require('../models/Insurance');
+const Notification = require('../models/Notification');
 
 exports.getAllPatients = async (req, res) => {
   try {
@@ -71,6 +72,11 @@ exports.replyToMessage = async (req, res) => {
 
     await newMessage.save();
     res.status(201).json({ message: 'Reply sent successfully.' });
+    await new Notification({
+    recipient: patientId,
+    message: `New message from Dr. ${req.user.email}`, // Or use their name if you have it
+    type: 'message'
+}).save();
   } catch (err) {
     console.error(err.message);
     res.status(500).send('Server Error');

@@ -1,5 +1,17 @@
 const Insurance = require('../models/Insurance');
+const providerData = require('../utils/providerData');
 
+exports.getProvidersByState = (req, res) => {
+    const { state } = req.query;
+
+    // Validate state input
+    if (!state) {
+        return res.status(400).json({ message: "State parameter is required" });
+    }
+    const providers = providerData[state.toUpperCase()] || providerData['OTHER'];
+    
+    res.json(providers);
+};
 exports.addInsurance = async (req, res) => {
   const { policyNumber, provider, coverageDetails } = req.body;
 

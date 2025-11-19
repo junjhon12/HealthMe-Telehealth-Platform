@@ -15,6 +15,7 @@ router.get('/appointments', [authMiddleware, isPatient], patientController.getPa
 
 router.post('/messages', [authMiddleware, isPatient], patientController.sendMessage);
 router.get('/messages', [authMiddleware, isPatient], patientController.getPatientMessages);
+router.delete('/messages/:id', [authMiddleware, isPatient], patientController.deleteMessage)
 
 router.get('/doctors', [authMiddleware, isPatient], patientController.getAvailableDoctors);
 module.exports = router;

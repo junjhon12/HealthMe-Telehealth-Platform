@@ -34,6 +34,13 @@ let allPatients = [];
 let selectedPatientId = null;
 let activeRoom = null; // For video chat
 
+// --- Variables ---
+let notificationBtn;
+let notificationDropdown;
+let notificationBadge;
+let notificationList;
+let markAllReadBtn;
+
 // --- Initialization ---
 document.addEventListener('DOMContentLoaded', () => {
     // Standard Elements
@@ -67,6 +74,13 @@ document.addEventListener('DOMContentLoaded', () => {
     localVideoDoctor = document.getElementById('local-video-doctor');
     remoteVideoDoctor = document.getElementById('remote-video-doctor');
 
+    // Notification Selectors
+    notificationBtn = document.getElementById('notification-btn');
+    notificationDropdown = document.getElementById('notification-dropdown');
+    notificationBadge = document.getElementById('notification-badge');
+    notificationList = document.getElementById('notification-list');
+    markAllReadBtn = document.getElementById('mark-all-read');
+
     // --- Start Application ---
     populateUserDetails();
     fetchAllPatients();
@@ -75,11 +89,23 @@ document.addEventListener('DOMContentLoaded', () => {
     setupSearchFilter();
     setupLogout();
 
-    // --- HOOK UP EVENT LISTENERS (This was missing) ---
     replyForm?.addEventListener('submit', handleReplySubmit);
     aiFormDoctor?.addEventListener('submit', handleAiAnalysisSubmitDoctor);
     joinVideoBtnDoctor?.addEventListener('click', joinVideoRoom);
     leaveVideoBtnDoctor?.addEventListener('click', leaveVideoRoom);
+    notificationBtn?.addEventListener('click', toggleNotifications);
+    markAllReadBtn?.addEventListener('click', markAllNotificationsRead);
+
+    document.addEventListener('click', (e) => {
+        if (!notificationBtn.contains(e.target)) {
+            notificationDropdown.classList.remove('show');
+        }
+    });
+    // Initial Fetch
+    fetchNotifications();
+    
+    // Optional: Poll every 60 seconds
+    setInterval(fetchNotifications, 60000);
 });
 
 // --- Navigation ---
@@ -597,5 +623,77 @@ function showMessage(element, text, type) {
         }, 5000);
     } else {
         console.warn('showMessage: element is null');
+    }
+}
+
+async function fetchNotifications() {
+    const token = localStorage.getItem('token');
+    try {
+        const response = await fetch('http://localhost:3000/api/notifications', {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (response.ok) {
+            const notifications = await response.json();
+            updateNotificationUI(notifications);
+        }
+    } catch (error) {
+        console.error('Error fetching notifications:', error);
+    }
+}
+
+function updateNotificationUI(notifications) {
+    const unreadCount = notifications.filter(n => !n.isRead).length;
+    
+    // Update Badge
+    if (unreadCount > 0) {
+        notificationBadge.textContent = unreadCount;
+        notificationBadge.style.display = 'block';
+    } else {
+        notificationBadge.style.display = 'none';
+    }
+
+    // Update List
+    if (notifications.length === 0) {
+        notificationList.innerHTML = '<div class="notification-empty">No notifications</div>';
+        return;
+    }
+
+    notificationList.innerHTML = notifications.map(n => `
+        <div class="notification-item ${n.isRead ? '' : 'unread'}" onclick="markOneRead('${n._id}')">
+            <div>${n.message}</div>
+            <span class="notification-time">${new Date(n.createdAt).toLocaleString()}</span>
+        </div>
+    `).join('');
+}
+
+function toggleNotifications() {
+    notificationDropdown.classList.toggle('show');
+}
+
+async function markAllNotificationsRead() {
+    const token = localStorage.getItem('token');
+    try {
+        await fetch('http://localhost:3000/api/notifications/read-all', {
+            method: 'PUT',
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        fetchNotifications(); // Refresh UI
+    } catch (error) {
+        console.error(error);
+    }
+}
+
+async function markOneRead(id) {
+    // Optimistically remove 'unread' class for instant feedback
+    // In a real app, you might navigate the user to the relevant section (e.g., Messages)
+    const token = localStorage.getItem('token');
+    try {
+        await fetch(`http://localhost:3000/api/notifications/${id}/read`, {
+            method: 'PUT',
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        fetchNotifications();
+    } catch (error) {
+        console.error(error);
     }
 }

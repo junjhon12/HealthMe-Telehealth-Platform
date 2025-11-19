@@ -2,6 +2,7 @@ const Symptom = require('../models/Symptom');
 const Appointment = require('../models/Appointment');
 const Message = require('../models/Message');
 const User = require('../models/User');
+const Notification = require('../models/Notification');
 
 exports.logSymptom = async (req, res) => {
   try {
@@ -54,6 +55,11 @@ exports.scheduleAppointment = async (req, res) => {
       reason
     });
     await newAppointment.save();
+    await new Notification({
+    recipient: doctorId,
+    message: `New appointment request from a patient.`,
+    type: 'appointment'
+}).save();
     res.status(201).json({ message: 'Appointment scheduled successfully.', appointment: newAppointment });
   } catch (err) {
     console.error(err.message);
@@ -146,6 +152,30 @@ exports.deleteSymptom = async (req, res) => {
     await Symptom.findByIdAndDelete(symptomId);
 
     res.json({ message: 'Symptom log deleted successfully.' });
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).send('Server Error');
+  }
+};
+
+exports.deleteMessage = async (req, res) => {
+  try {
+    const messageId = req.params.id;
+    const patientId = req.user.id;
+
+    const message = await Message.findById(messageId);
+
+    if (!message) {
+      return res.status(404).json({ message: 'Message not found.' });
+    }
+
+    // Security: Only allow deleting messages sent BY the patient
+    if (message.from.toString() !== patientId) {
+      return res.status(403).json({ message: 'Unauthorized.' });
+    }
+
+    await Message.findByIdAndDelete(messageId);
+    res.json({ message: 'Message deleted.' });
   } catch (err) {
     console.error(err.message);
     res.status(500).send('Server Error');
