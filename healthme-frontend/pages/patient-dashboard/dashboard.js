@@ -717,25 +717,66 @@ async function joinVideoRoom() {
         const data = await response.json();
         if (!response.ok) throw new Error(data.message);
 
-        const room = await Twilio.Video.connect(data.token, { name: roomName });
+        // 1. Create Local Tracks (Audio + Video) explicitly
+        const localTracks = await Twilio.Video.createLocalTracks({
+            audio: true,
+            video: { width: 640 }
+        });
+
+        // 2. Display Local Video
+        const videoTrack = localTracks.find(track => track.kind === 'video');
+        localVideoPatient.innerHTML = ''; 
+        localVideoPatient.appendChild(videoTrack.attach());
+
+        // 3. Connect to Room with existing tracks
+        const room = await Twilio.Video.connect(data.token, { 
+            name: roomName,
+            tracks: localTracks 
+        });
         activeRoom = room;
 
-        const localTrack = await Twilio.Video.createLocalVideoTrack();
-        localVideoPatient.appendChild(localTrack.attach());
+        // 4. Handle Remote Participants
+        const handleTrack = (track) => {
+            // Remove placeholder label if present
+            const label = remoteVideoPatient.querySelector('.video-label');
+            if (label) label.remove();
+            remoteVideoPatient.appendChild(track.attach());
+        };
 
-        room.participants.forEach(p => p.on('trackSubscribed', track => remoteVideoPatient.appendChild(track.attach())));
-        room.on('participantConnected', p => p.on('trackSubscribed', track => remoteVideoPatient.appendChild(track.attach())));
+        // Handle existing participants
+        room.participants.forEach(p => {
+            p.tracks.forEach(publication => {
+                if (publication.track) handleTrack(publication.track);
+            });
+            p.on('trackSubscribed', handleTrack);
+        });
+        
+        // Handle new participants
+        room.on('participantConnected', p => {
+            p.on('trackSubscribed', handleTrack);
+        });
+        
         room.on('participantDisconnected', p => {
-            p.tracks.forEach(pub => pub.track.detach().forEach(el => el.remove()));
+            p.tracks.forEach(pub => {
+                if (pub.track) {
+                    pub.track.detach().forEach(el => el.remove());
+                }
+            });
             remoteVideoPatient.innerHTML = '<div class="video-label">Doctor\'s Video</div>';
         });
+
         room.on('disconnected', () => {
-            localTrack.stop();
+            // Stop all local tracks to release camera/mic
+            localTracks.forEach(track => track.stop());
+            
             localVideoPatient.innerHTML = '<div class="video-label">Your Video</div>';
             remoteVideoPatient.innerHTML = '<div class="video-label">Doctor\'s Video</div>';
             activeRoom = null;
         });
-    } catch (e) { alert('Video Error: ' + e.message); }
+    } catch (e) { 
+        console.error(e);
+        alert('Video Error: ' + e.message); 
+    }
 }
 
 function leaveVideoRoom() {
@@ -891,8 +932,8 @@ function setupVoiceAgent() {
     recognition.onstart = () => {
         voiceInputBtn.classList.add('listening');
         chatbotInput.placeholder = "Listening...";
-        isVoiceMode = true; // Enable flag tentatively
-        didReceiveResult = false; // Reset tracker
+        isVoiceMode = true; // Flag to enable TTS response
+        didReceiveResult = false; 
     };
 
     recognition.onend = () => {
@@ -900,16 +941,16 @@ function setupVoiceAgent() {
         chatbotInput.placeholder = "Type or speak your message...";
         
         if (!didReceiveResult) {
-            isVoiceMode = false;
+             isVoiceMode = false;
         }
     };
 
     recognition.onresult = (event) => {
         const transcript = event.results[0][0].transcript;
         chatbotInput.value = transcript;
-        didReceiveResult = true; // Mark success
-        
+        didReceiveResult = true;
         // Auto-submit the form for a seamless "Assistant" feel
+        // We dispatch a submit event so handleChatbotSubmit runs
         chatbotForm.dispatchEvent(new Event('submit')); 
     };
 
@@ -917,8 +958,6 @@ function setupVoiceAgent() {
         console.error("Voice error:", event.error);
         voiceInputBtn.classList.remove('listening');
         chatbotInput.placeholder = "Error. Please type.";
-        
-        // FIX: Disable voice mode on error
         isVoiceMode = false;
     };
 }
