@@ -167,13 +167,13 @@ function setupSearchFilter() {
 
 function setupLogout() {
     logoutButton.addEventListener('click', () => {
-        localStorage.removeItem('token');
+        localStorage.removeItem('hm_token');
         window.location.href = '../login/index.html';
     });
 }
 
 async function populateUserDetails() {
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem('hm_token');
     if (!token) {
         window.location.href = '../login/index.html';
         return;
@@ -191,11 +191,11 @@ async function populateUserDetails() {
             userEmailElement.textContent = userData.email;
             if (userData.role !== 'doctor') {
                 alert('Access denied.');
-                localStorage.removeItem('token');
+                localStorage.removeItem('hm_token');
                 window.location.href = '../login/index.html';
             }
         } else {
-            localStorage.removeItem('token');
+            localStorage.removeItem('hm_token');
             window.location.href = '../login/index.html';
         }
     } catch (error) {
@@ -204,7 +204,7 @@ async function populateUserDetails() {
 }
 
 async function fetchAllPatients() {
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem('hm_token');
     try {
         const response = await fetch('http://localhost:3000/api/doctor/patients', {
             headers: { 'Authorization': `Bearer ${token}` }
@@ -275,7 +275,7 @@ async function selectPatient(patient) {
 }
 
 async function fetchPatientInsurance(patientId) {
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem('hm_token');
     const container = document.getElementById('patient-insurance-info');
     
     try {
@@ -315,7 +315,7 @@ async function fetchPatientInsurance(patientId) {
 }
 
 async function fetchPatientSymptoms(patientId) {
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem('hm_token');
     const historyList = document.getElementById('patient-symptoms-list');
     historyList.innerHTML = '<p class="loading">Loading symptoms...</p>';
     try {
@@ -360,7 +360,7 @@ function displayPatientSymptoms(symptoms) {
 
 // --- Appointments ---
 async function fetchDoctorAppointments() {
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem('hm_token');
     appointmentsContainer.innerHTML = '<p class="loading">Loading appointments...</p>';
     try {
         const response = await fetch('http://localhost:3000/api/doctor/appointments', {
@@ -414,7 +414,7 @@ async function fetchDoctorAppointments() {
 
 // --- Messaging ---
 async function fetchDoctorMessages() {
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem('hm_token');
     messagesContainer.innerHTML = '<p class="loading">Loading messages...</p>';
     try {
         const response = await fetch('http://localhost:3000/api/doctor/messages', {
@@ -461,7 +461,7 @@ async function fetchDoctorMessages() {
 
 async function handleReplySubmit(e) {
     e.preventDefault();
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem('hm_token');
     const patientId = replyPatientId.value;
     const content = replyContent.value;
 
@@ -501,7 +501,7 @@ async function handleReplySubmit(e) {
 // --- AI Analysis ---
 async function handleAiAnalysisSubmitDoctor(e) {
     e.preventDefault();
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem('hm_token');
     const symptoms = aiSymptomsInputDoctor.value;
     
     aiResultDoctor.textContent = 'Analyzing...';
@@ -532,7 +532,7 @@ async function handleAiAnalysisSubmitDoctor(e) {
 
 // --- Video Chat ---
 async function joinVideoRoom() {
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem('hm_token');
     const roomName = videoRoomNameDoctor.value;
     if (!roomName) {
         alert('Please enter a room name (Appointment ID)');
@@ -627,7 +627,7 @@ function showMessage(element, text, type) {
 }
 
 async function fetchNotifications() {
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem('hm_token');
     try {
         const response = await fetch('http://localhost:3000/api/notifications', {
             headers: { 'Authorization': `Bearer ${token}` }
@@ -671,7 +671,7 @@ function toggleNotifications() {
 }
 
 async function markAllNotificationsRead() {
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem('hm_token');
     try {
         await fetch('http://localhost:3000/api/notifications/read-all', {
             method: 'PUT',
@@ -686,7 +686,7 @@ async function markAllNotificationsRead() {
 async function markOneRead(id) {
     // Optimistically remove 'unread' class for instant feedback
     // In a real app, you might navigate the user to the relevant section (e.g., Messages)
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem('hm_token');
     try {
         await fetch(`http://localhost:3000/api/notifications/${id}/read`, {
             method: 'PUT',

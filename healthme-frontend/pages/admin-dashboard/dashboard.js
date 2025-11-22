@@ -65,7 +65,7 @@ function setupNavigation() {
 
 // --- API Calls ---
 async function fetchSystemStats() {
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem('hm_token');
     try {
         const res = await fetch('http://localhost:3000/api/admin/stats', {
             headers: { 'Authorization': `Bearer ${token}` }
@@ -81,7 +81,7 @@ async function fetchSystemStats() {
 }
 
 async function fetchUsers() {
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem('hm_token');
     userTableBody.innerHTML = '<tr><td colspan="4" class="loading">Loading users...</td></tr>';
     
     try {
@@ -121,7 +121,7 @@ function renderUsers(users) {
 async function deleteUser(userId) {
     if (!confirm('Are you sure? This will delete the user and ALL their data (appointments, messages, etc.).')) return;
 
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem('hm_token');
     try {
         const res = await fetch(`http://localhost:3000/api/admin/users/${userId}`, {
             method: 'DELETE',
@@ -139,7 +139,7 @@ async function deleteUser(userId) {
 
 // --- Auth ---
 async function populateAdminDetails() {
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem('hm_token');
     if (!token) return window.location.href = '../login/index.html';
 
     try {
@@ -150,7 +150,7 @@ async function populateAdminDetails() {
             const user = await response.json();
             if (user.role !== 'admin') {
                 alert('Access Denied: Admin only.');
-                localStorage.removeItem('token');
+                localStorage.removeItem('hm_token');
                 window.location.href = '../login/index.html';
                 return;
             }
@@ -163,7 +163,7 @@ async function populateAdminDetails() {
 
 function setupLogout() {
     logoutButton.addEventListener('click', () => {
-        localStorage.removeItem('token');
+        localStorage.removeItem('hm_token');
         window.location.href = '../login/index.html';
     });
 }

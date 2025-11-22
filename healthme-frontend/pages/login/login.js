@@ -43,9 +43,10 @@ loginForm.addEventListener('submit', async (event) => {
 
         if (response.ok) {
             console.log('Login response:', data);
-            localStorage.setItem('token', data.token);
+            // FIX: Use 'hm_token' to match dashboard.js and main.js
+            localStorage.setItem('hm_token', data.token);
             console.log('Token saved to localStorage:', data.token);
-            console.log('Verified token in localStorage:', localStorage.getItem('token'));
+            
             showMessage(messageElement, 'Login successful! Redirecting...', 'success');
             
             // Determine dashboard based on role

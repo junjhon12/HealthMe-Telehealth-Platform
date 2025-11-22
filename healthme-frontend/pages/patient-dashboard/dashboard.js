@@ -193,7 +193,7 @@ function setupFormHandlers() {
 
 // --- User & Auth ---
 async function populateUserDetails() {
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem('hm_token');
     if (!token) return window.location.href = '../login/index.html';
 
     try {
@@ -204,21 +204,21 @@ async function populateUserDetails() {
             const userData = await response.json();
             userEmailElement.textContent = userData.email;
         } else {
-            localStorage.removeItem('token');
+            localStorage.removeItem('hm_token');
             window.location.href = '../login/index.html';
         }
     } catch (e) { window.location.href = '../login/index.html'; }
 }
 
 function handleLogout() {
-    localStorage.removeItem('token');
+    localStorage.removeItem('hm_token');
     window.location.href = '../login/index.html';
 }
 
 // --- Insurance ---
 async function handleStateChange(e) {
     const state = e.target.value;
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem('hm_token');
     insuranceProviderSelect.innerHTML = '<option value="">Loading...</option>';
     insuranceProviderSelect.disabled = true;
 
@@ -244,7 +244,7 @@ async function handleStateChange(e) {
 
 async function handleInsuranceSubmit(e) {
     e.preventDefault();
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem('hm_token');
     const policyNumber = document.getElementById('policy-number').value;
     const provider = document.getElementById('provider').value;
     const coverageDetails = document.getElementById('coverage').value;
@@ -267,7 +267,7 @@ async function handleInsuranceSubmit(e) {
 }
 
 async function fetchInsurance() {
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem('hm_token');
     insuranceList.innerHTML = '<p class="loading">Loading insurance...</p>';
     try {
         const res = await fetch('http://localhost:3000/api/insurance', {
@@ -291,7 +291,7 @@ async function fetchInsurance() {
 
 // --- Symptoms ---
 async function fetchSymptomHistory() {
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem('hm_token');
     symptomHistoryElement.innerHTML = '<p class="loading">Loading...</p>';
     try {
         const response = await fetch('http://localhost:3000/api/patient/symptoms', {
@@ -323,7 +323,7 @@ async function fetchSymptomHistory() {
 }
 
 async function handleDeleteSymptom(symptomId) {
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem('hm_token');
     try {
         const response = await fetch(`http://localhost:3000/api/patient/symptoms/${symptomId}`, {
             method: 'DELETE',
@@ -378,7 +378,7 @@ function analyzeLog(symptoms) {
 
 async function handleSymptomSubmit(e) {
     e.preventDefault();
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem('hm_token');
     const symptomsInput = document.getElementById('symptoms-input').value;
     const messageDiv = document.getElementById('symptom-message');
     const symptoms = symptomsInput.split(',').map(s => s.trim()).filter(s => s);
@@ -402,7 +402,7 @@ async function handleSymptomSubmit(e) {
 
 // --- Doctors & Appointments ---
 async function populateDoctors() {
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem('hm_token');
     try {
         const response = await fetch('http://localhost:3000/api/patient/doctors', {
             headers: { 'Authorization': `Bearer ${token}` }
@@ -425,7 +425,7 @@ async function populateDoctors() {
 
 async function handleAppointmentSubmit(e) {
     e.preventDefault();
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem('hm_token');
     const messageDiv = document.getElementById('appointment-message');
     const doctorId = doctorSelect.value;
     const date = document.getElementById('appointment-date').value;
@@ -450,7 +450,7 @@ async function handleAppointmentSubmit(e) {
 }
 
 async function fetchPatientAppointments() {
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem('hm_token');
     appointmentListContainer.innerHTML = '<p class="loading">Loading...</p>';
     try {
         const response = await fetch('http://localhost:3000/api/patient/appointments', {
@@ -505,7 +505,7 @@ async function fetchPatientAppointments() {
 // --- Messaging ---
 async function handleMessageSubmit(e) {
     e.preventDefault();
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem('hm_token');
     const doctorId = messageDoctorSelect.value;
     const content = document.getElementById('message-content').value;
 
@@ -528,7 +528,7 @@ async function handleMessageSubmit(e) {
 }
 
 async function fetchPatientMessages() {
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem('hm_token');
     messageHistoryContainer.innerHTML = '<p class="loading">Loading...</p>';
     try {
         const response = await fetch('http://localhost:3000/api/patient/messages', {
@@ -571,7 +571,7 @@ function handleMessageContainerClick(e) {
 }
 
 async function handleDeleteMessage(id) {
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem('hm_token');
     try {
         const response = await fetch(`http://localhost:3000/api/patient/messages/${id}`, {
             method: 'DELETE',
@@ -589,7 +589,7 @@ async function handleDeleteMessage(id) {
 // --- AI & Chatbot ---
 async function handleAiAnalysisSubmit(e) {
     e.preventDefault();
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem('hm_token');
     const symptoms = aiSymptomsInputPatient.value;
     aiResultPatient.textContent = 'Analyzing...';
     try {
@@ -611,7 +611,7 @@ async function handleAiAnalysisSubmit(e) {
 
 async function handleChatbotSubmit(e) {
     e.preventDefault();
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem('hm_token');
     const prompt = chatbotInput.value.trim();
     if (!prompt) return;
 
@@ -656,7 +656,7 @@ async function handleChatbotSubmit(e) {
 
 // --- Find a Doctor ---
 async function fetchAndDisplayDoctors() {
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem('hm_token');
     doctorListContainer.innerHTML = '<p class="loading">Loading doctors...</p>';
 
     try {
@@ -704,7 +704,7 @@ function selectDoctorForAppointment(doctorId, doctorEmail) {
 
 // --- Video ---
 async function joinVideoRoom() {
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem('hm_token');
     const roomName = videoRoomNamePatient.value;
     if (!roomName) return alert('Enter Room Name');
 
@@ -787,7 +787,7 @@ function appendChatMessage(message, role) {
 }
 
 async function fetchNotifications() {
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem('hm_token');
     try {
         const response = await fetch('http://localhost:3000/api/notifications', {
             headers: { 'Authorization': `Bearer ${token}` }
@@ -831,7 +831,7 @@ function toggleNotifications() {
 }
 
 async function markAllNotificationsRead() {
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem('hm_token');
     try {
         await fetch('http://localhost:3000/api/notifications/read-all', {
             method: 'PUT',
@@ -846,7 +846,7 @@ async function markAllNotificationsRead() {
 async function markOneRead(id) {
     // Optimistically remove 'unread' class for instant feedback
     // In a real app, you might navigate the user to the relevant section (e.g., Messages)
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem('hm_token');
     try {
         await fetch(`http://localhost:3000/api/notifications/${id}/read`, {
             method: 'PUT',
