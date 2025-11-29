@@ -13,7 +13,24 @@
             <div class="navbar-logo">
                 <h1>HealthMe</h1>
             </div>
+            
             <div class="user-section">
+                <div class="notification-wrapper" id="notification-btn">
+                    <span class="notification-icon">🔔</span>
+                    <span class="notification-badge" id="notification-badge">0</span>
+                    
+                    <div class="notification-dropdown" id="notification-dropdown">
+                        <div class="notification-header">
+                            <span>Notifications</span>
+                            <span class="mark-all-read" id="mark-all-read">Mark all read</span>
+                        </div>
+                        <div class="notification-list" id="notification-list">
+                            <div class="notification-empty">No notifications</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="user-info">
+                    </div>
                 <div class="user-info">
                     <span id="user-email"></span>
                 </div>
@@ -29,7 +46,7 @@
                 <a href="#symptom-history" class="nav-link" data-section="symptom-history">Symptom History</a>
                 <a href="#appointments" class="nav-link" data-section="appointments">Appointments</a>
                 <a href="#messages" class="nav-link" data-section="messages">Messages</a>
-                <a href="#ai-analysis" class="nav-link" data-section="ai-analysis">AI Analysis</a>
+                <a href="#insurance" class="nav-link" data-section="insurance">Insurance</a> <a href="#ai-analysis" class="nav-link" data-section="ai-analysis">AI Analysis</a>
                 <a href="#find-doctor" class="nav-link" data-section="find-doctor">Find a Doctor</a>
                 <a href="#chatbot" class="nav-link" data-section="chatbot">AI ChatBot</a>
                 <a href="#video-chat" class="nav-link" data-section="video-chat">Video Chat</a>
@@ -58,22 +75,12 @@
                 <div id="symptom-history-container" class="history-container">
                     <p class="loading">Loading your history...</p>
                 </div>
+                <div id="symptom-history-message" class="message"></div>
             </section>
 
             <section id="appointments" class="section">
                 <div class="section-header">
-                    <h2>Your Appointments</h2>
-                </div>
-                <div class="section-divider"></div>
-                
-                <div id="appointments-history-container" class="appointments-list">
-                    <p class="loading">Loading your appointments...</p>
-                </div>
-
-                <div class="section-divider"></div>
-                
-                <div class="section-header">
-                    <h2>Schedule a New Appointment</h2>
+                    <h2>Schedule an Appointment</h2>
                 </div>
                 <form id="appointment-form" class="form">
                     <div class="form-group">
@@ -93,6 +100,14 @@
                     <button type="submit" class="btn btn-primary">Schedule</button>
                 </form>
                 <div id="appointment-message" class="message"></div>
+
+                <div class="section-divider"></div>
+                <div class="section-header">
+                    <h2>Your Upcoming Appointments</h2>
+                </div>
+                <div id="appointment-list-container" class="appointments-list">
+                    <p class="loading">Loading appointments...</p>
+                </div>
             </section>
 
             <section id="messages" class="section">
@@ -119,6 +134,53 @@
                     <button type="submit" class="btn btn-primary">Send Message</button>
                 </form>
                 <div id="message-message" class="message"></div>
+            </section>
+
+            <section id="insurance" class="section">
+                <div class="section-header">
+                    <h2>Insurance Policy</h2>
+                    <p>Manage your insurance details</p>
+                </div>
+                <form id="insurance-form" class="form">
+                    <div class="form-group">
+                        <label for="insurance-state">State / Region</label>
+                        <select id="insurance-state" required class="form-input">
+                            <option value="">Select your state...</option>
+                            <option value="AL">Alabama</option>
+                            <option value="AK">Alaska</option>
+                            <option value="AZ">Arizona</option>
+                            <option value="CA">California</option>
+                            <option value="FL">Florida</option>
+                            <option value="GA">Georgia</option>
+                            <option value="NY">New York</option>
+                            <option value="TX">Texas</option>
+                            <option value="WA">Washington</option>
+                            <option value="OTHER">Other / National</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="provider">Insurance Provider</label>
+                        <select id="provider" required class="form-input" disabled>
+                            <option value="">Select a state first...</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="policy-number">Policy Number</label>
+                        <input type="text" id="policy-number" required placeholder="e.g., XYZ-123456789">
+                    </div>
+                    <div class="form-group">
+                        <label for="coverage">Coverage Details</label>
+                        <textarea id="coverage" rows="3" placeholder="Optional details..."></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Add Insurance</button>
+                </form>
+                
+                <div class="section-divider"></div>
+                <h3>Your Policies</h3>
+                <div id="insurance-list" class="history-container">
+                    <p class="loading">Loading insurance...</p>
+                </div>
+                <div id="insurance-message" class="message"></div>
             </section>
 
             <section id="ai-analysis" class="section">
@@ -151,10 +213,10 @@
                     <h2>AI ChatBot</h2>
                     <p>Ask general health questions. Not a substitute for a doctor.</p>
                 </div>
-                <div id="chatbot-history" class="chatbot-messages">
-                    </div>
+                <div id="chatbot-history" class="chatbot-messages"></div>
                 <form id="chatbot-form" class="chatbot-form">
-                    <input type="text" id="chatbot-input" placeholder="Type your message..." required>
+                    <input type="text" id="chatbot-input" placeholder="Type or speak your message..." required>
+                    <button type="button" id="voice-input-btn" class="btn btn-secondary" title="Speak">🎤</button>
                     <button type="submit" class="btn btn-primary">Send</button>
                 </form>
             </section>
@@ -164,18 +226,24 @@
                     <h2>Video Chat</h2>
                     <p>Join your scheduled video appointment.</p>
                 </div>
+                <div class="section-divider"></div>
 
-                <div id="video-room" class="video-container">
-                    <div id="local-video" class="video-participant"></div>
-                    <div id="remote-video" class="video-participant"></div>
-                </div>
-                
                 <div class="video-controls">
-                    <input type="text" id="video-room-name" placeholder="Enter Appointment ID" class="form-input">
-                    <button id="join-video-btn" class="btn btn-primary">Join Call</button>
-                    <button id="leave-video-btn" class="btn btn-secondary">Leave Call</button>
+                    <input type="text" id="video-room-name-patient" placeholder="Enter Appointment ID / Room Name" class="form-input">
+                    <button id="join-video-btn-patient" class="btn btn-primary">Join Call</button>
+                    <button id="leave-video-btn-patient" class="btn btn-secondary">Leave Call</button>
+                </div>
+
+                <div id="video-room-patient" class="video-container">
+                    <div id="local-video-patient" class="video-participant local">
+                        <div class="video-label">Your Video</div>
+                    </div>
+                    <div id="remote-video-patient" class="video-participant remote">
+                        <div class="video-label">Doctor's Video</div>
+                    </div>
                 </div>
             </section>
+
         </main>
     </div>
 

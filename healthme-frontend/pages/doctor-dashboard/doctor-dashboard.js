@@ -34,6 +34,13 @@ let allPatients = [];
 let selectedPatientId = null;
 let activeRoom = null; // For video chat
 
+// --- Variables ---
+let notificationBtn;
+let notificationDropdown;
+let notificationBadge;
+let notificationList;
+let markAllReadBtn;
+
 // --- Initialization ---
 document.addEventListener('DOMContentLoaded', () => {
     // Standard Elements
@@ -67,6 +74,13 @@ document.addEventListener('DOMContentLoaded', () => {
     localVideoDoctor = document.getElementById('local-video-doctor');
     remoteVideoDoctor = document.getElementById('remote-video-doctor');
 
+    // Notification Selectors
+    notificationBtn = document.getElementById('notification-btn');
+    notificationDropdown = document.getElementById('notification-dropdown');
+    notificationBadge = document.getElementById('notification-badge');
+    notificationList = document.getElementById('notification-list');
+    markAllReadBtn = document.getElementById('mark-all-read');
+
     // --- Start Application ---
     populateUserDetails();
     fetchAllPatients();
@@ -75,11 +89,23 @@ document.addEventListener('DOMContentLoaded', () => {
     setupSearchFilter();
     setupLogout();
 
-    // --- HOOK UP EVENT LISTENERS (This was missing) ---
     replyForm?.addEventListener('submit', handleReplySubmit);
     aiFormDoctor?.addEventListener('submit', handleAiAnalysisSubmitDoctor);
     joinVideoBtnDoctor?.addEventListener('click', joinVideoRoom);
     leaveVideoBtnDoctor?.addEventListener('click', leaveVideoRoom);
+    notificationBtn?.addEventListener('click', toggleNotifications);
+    markAllReadBtn?.addEventListener('click', markAllNotificationsRead);
+
+    document.addEventListener('click', (e) => {
+        if (!notificationBtn.contains(e.target)) {
+            notificationDropdown.classList.remove('show');
+        }
+    });
+    // Initial Fetch
+    fetchNotifications();
+    
+    // Optional: Poll every 60 seconds
+    setInterval(fetchNotifications, 60000);
 });
 
 // --- Navigation ---
@@ -141,13 +167,13 @@ function setupSearchFilter() {
 
 function setupLogout() {
     logoutButton.addEventListener('click', () => {
-        localStorage.removeItem('token');
+        localStorage.removeItem('hm_token');
         window.location.href = '../login/index.html';
     });
 }
 
 async function populateUserDetails() {
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem('hm_token');
     if (!token) {
         window.location.href = '../login/index.html';
         return;
@@ -165,11 +191,11 @@ async function populateUserDetails() {
             userEmailElement.textContent = userData.email;
             if (userData.role !== 'doctor') {
                 alert('Access denied.');
-                localStorage.removeItem('token');
+                localStorage.removeItem('hm_token');
                 window.location.href = '../login/index.html';
             }
         } else {
-            localStorage.removeItem('token');
+            localStorage.removeItem('hm_token');
             window.location.href = '../login/index.html';
         }
     } catch (error) {
@@ -178,7 +204,7 @@ async function populateUserDetails() {
 }
 
 async function fetchAllPatients() {
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem('hm_token');
     try {
         const response = await fetch('http://localhost:3000/api/doctor/patients', {
             headers: { 'Authorization': `Bearer ${token}` }
@@ -223,20 +249,74 @@ async function selectPatient(patient) {
             <div class="patient-email-display">Patient ID: ${patient._id}</div>
         </div>
         <div class="info-grid">
-            <div class="info-item"><div class="info-label">Role</div><div class="info-value">Patient</div></div>
-            <div class="info-item"><div class="info-label">Registered</div><div class="info-value">${new Date(patient.createdAt || new Date()).toLocaleDateString()}</div></div>
+            <div class="info-item">
+                <div class="info-label">Role</div>
+                <div class="info-value">Patient</div>
+            </div>
+            <div class="info-item">
+                <div class="info-label">Registered</div>
+                <div class="info-value">${new Date(patient.createdAt || new Date()).toLocaleDateString()}</div>
+            </div>
+        </div>
+        
+        <div class="section-divider" style="margin: 20px 0; opacity: 0.5;"></div>
+        <div id="patient-insurance-info">
+            <p class="loading">Loading insurance details...</p>
         </div>
     `;
+    
     patientInfoContainer.innerHTML = patientInfoHTML;
-    await fetchPatientSymptoms(patient._id);
+    fetchPatientSymptoms(patient._id);
+    fetchPatientInsurance(patient._id);
+    
     showSection('patient-details');
     navLinks.forEach(l => l.classList.remove('active'));
     document.querySelector('[data-section="patient-details"]').classList.add('active');
 }
 
+async function fetchPatientInsurance(patientId) {
+    const token = localStorage.getItem('hm_token');
+    const container = document.getElementById('patient-insurance-info');
+    
+    try {
+        const response = await fetch(`http://localhost:3000/api/doctor/patients/${patientId}/insurance`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+
+        if (response.ok) {
+            const policies = await response.json();
+            
+            if (policies.length === 0) {
+                container.innerHTML = '<p style="color: var(--text-secondary); font-size: 14px;">No insurance on file.</p>';
+                return;
+            }
+
+            // Render the policies nicely
+            container.innerHTML = policies.map(ins => `
+                <div style="background: rgba(99, 102, 241, 0.1); padding: 15px; border-radius: 8px; margin-bottom: 10px; border: 1px solid var(--accent);">
+                    <div style="font-weight: 600; color: var(--text-primary); font-size: 15px;">${ins.provider}</div>
+                    <div style="font-size: 13px; color: var(--text-secondary); margin-top: 4px;">
+                        Policy #: <span style="color: var(--text-primary);">${ins.policyNumber}</span>
+                    </div>
+                    ${ins.coverageDetails ? `
+                        <div style="font-size: 13px; color: var(--text-secondary); margin-top: 4px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 4px;">
+                            ${ins.coverageDetails}
+                        </div>
+                    ` : ''}
+                </div>
+            `).join('');
+        } else {
+            container.innerHTML = '<p class="loading error">Failed to load insurance.</p>';
+        }
+    } catch (error) {
+        console.error('Error fetching insurance:', error);
+        container.innerHTML = '<p class="loading error">Could not load insurance.</p>';
+    }
+}
+
 async function fetchPatientSymptoms(patientId) {
-    const token = localStorage.getItem('token');
-    const historyList = document.getElementById('patient-symptoms');
+    const token = localStorage.getItem('hm_token');
+    const historyList = document.getElementById('patient-symptoms-list');
     historyList.innerHTML = '<p class="loading">Loading symptoms...</p>';
     try {
         const response = await fetch(`http://localhost:3000/api/doctor/patients/${patientId}/symptoms`, {
@@ -253,8 +333,9 @@ async function fetchPatientSymptoms(patientId) {
     }
 }
 
+
 function displayPatientSymptoms(symptoms) {
-    const historyList = document.getElementById('patient-symptoms');
+    const historyList = document.getElementById('patient-symptoms-list');
     historyList.innerHTML = '';
     if (!symptoms || symptoms.length === 0) {
         historyList.innerHTML = '<p class="loading">No symptom history available</p>';
@@ -279,7 +360,7 @@ function displayPatientSymptoms(symptoms) {
 
 // --- Appointments ---
 async function fetchDoctorAppointments() {
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem('hm_token');
     appointmentsContainer.innerHTML = '<p class="loading">Loading appointments...</p>';
     try {
         const response = await fetch('http://localhost:3000/api/doctor/appointments', {
@@ -333,7 +414,7 @@ async function fetchDoctorAppointments() {
 
 // --- Messaging ---
 async function fetchDoctorMessages() {
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem('hm_token');
     messagesContainer.innerHTML = '<p class="loading">Loading messages...</p>';
     try {
         const response = await fetch('http://localhost:3000/api/doctor/messages', {
@@ -380,7 +461,7 @@ async function fetchDoctorMessages() {
 
 async function handleReplySubmit(e) {
     e.preventDefault();
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem('hm_token');
     const patientId = replyPatientId.value;
     const content = replyContent.value;
 
@@ -420,7 +501,7 @@ async function handleReplySubmit(e) {
 // --- AI Analysis ---
 async function handleAiAnalysisSubmitDoctor(e) {
     e.preventDefault();
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem('hm_token');
     const symptoms = aiSymptomsInputDoctor.value;
     
     aiResultDoctor.textContent = 'Analyzing...';
@@ -451,7 +532,7 @@ async function handleAiAnalysisSubmitDoctor(e) {
 
 // --- Video Chat ---
 async function joinVideoRoom() {
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem('hm_token');
     const roomName = videoRoomNameDoctor.value;
     if (!roomName) {
         alert('Please enter a room name (Appointment ID)');
@@ -471,39 +552,56 @@ async function joinVideoRoom() {
         const data = await response.json();
         if (!response.ok) throw new Error(data.message);
 
+        // 1. Create Local Tracks (Audio + Video) explicitly
+        const localTracks = await Twilio.Video.createLocalTracks({
+            audio: true,
+            video: { width: 640 }
+        });
+
+        // 2. Display Local Video
+        const videoTrack = localTracks.find(track => track.kind === 'video');
+        localVideoDoctor.innerHTML = ''; 
+        localVideoDoctor.appendChild(videoTrack.attach());
+
+        // 3. Connect to Room with existing tracks
         const room = await Twilio.Video.connect(data.token, {
-            name: roomName
+            name: roomName,
+            tracks: localTracks
         });
         activeRoom = room;
 
-        const localTrack = await Twilio.Video.createLocalVideoTrack();
-        localVideoDoctor.innerHTML = ''; // Clear label
-        localVideoDoctor.appendChild(localTrack.attach());
+        // 4. Handle Remote Participants
+        const handleTrack = (track) => {
+            // Remove placeholder label if present
+            const label = remoteVideoDoctor.querySelector('.video-label');
+            if (label) label.remove();
+            remoteVideoDoctor.appendChild(track.attach());
+        };
 
-        room.participants.forEach(participant => {
-            participant.on('trackSubscribed', track => {
-                remoteVideoDoctor.innerHTML = ''; // Clear label
-                remoteVideoDoctor.appendChild(track.attach());
+        room.participants.forEach(p => {
+            p.tracks.forEach(publication => {
+                if (publication.track) handleTrack(publication.track);
             });
+            p.on('trackSubscribed', handleTrack);
         });
 
-        room.on('participantConnected', participant => {
-            participant.on('trackSubscribed', track => {
-                remoteVideoDoctor.innerHTML = ''; // Clear label
-                remoteVideoDoctor.appendChild(track.attach());
-            });
+        room.on('participantConnected', p => {
+            p.on('trackSubscribed', handleTrack);
         });
         
-        room.on('participantDisconnected', participant => {
-            participant.tracks.forEach(publication => {
-                const attachedElements = publication.track.detach();
-                attachedElements.forEach(element => element.remove());
+        room.on('participantDisconnected', p => {
+            p.tracks.forEach(pub => {
+                if (pub.track) {
+                    pub.track.detach().forEach(el => el.remove());
+                }
             });
             remoteVideoDoctor.innerHTML = '<div class="video-label">Patient\'s Video</div>';
         });
 
         room.on('disconnected', () => {
-            localTrack.stop();
+            // Stop all local tracks
+            localTracks.forEach(track => track.stop());
+
             localVideoDoctor.innerHTML = '<div class="video-label">Your Video</div>';
             remoteVideoDoctor.innerHTML = '<div class="video-label">Patient\'s Video</div>';
             activeRoom = null;
@@ -542,5 +640,77 @@ function showMessage(element, text, type) {
         }, 5000);
     } else {
         console.warn('showMessage: element is null');
+    }
+}
+
+async function fetchNotifications() {
+    const token = localStorage.getItem('hm_token');
+    try {
+        const response = await fetch('http://localhost:3000/api/notifications', {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (response.ok) {
+            const notifications = await response.json();
+            updateNotificationUI(notifications);
+        }
+    } catch (error) {
+        console.error('Error fetching notifications:', error);
+    }
+}
+
+function updateNotificationUI(notifications) {
+    const unreadCount = notifications.filter(n => !n.isRead).length;
+    
+    // Update Badge
+    if (unreadCount > 0) {
+        notificationBadge.textContent = unreadCount;
+        notificationBadge.style.display = 'block';
+    } else {
+        notificationBadge.style.display = 'none';
+    }
+
+    // Update List
+    if (notifications.length === 0) {
+        notificationList.innerHTML = '<div class="notification-empty">No notifications</div>';
+        return;
+    }
+
+    notificationList.innerHTML = notifications.map(n => `
+        <div class="notification-item ${n.isRead ? '' : 'unread'}" onclick="markOneRead('${n._id}')">
+            <div>${n.message}</div>
+            <span class="notification-time">${new Date(n.createdAt).toLocaleString()}</span>
+        </div>
+    `).join('');
+}
+
+function toggleNotifications() {
+    notificationDropdown.classList.toggle('show');
+}
+
+async function markAllNotificationsRead() {
+    const token = localStorage.getItem('hm_token');
+    try {
+        await fetch('http://localhost:3000/api/notifications/read-all', {
+            method: 'PUT',
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        fetchNotifications(); // Refresh UI
+    } catch (error) {
+        console.error(error);
+    }
+}
+
+async function markOneRead(id) {
+    // Optimistically remove 'unread' class for instant feedback
+    // In a real app, you might navigate the user to the relevant section (e.g., Messages)
+    const token = localStorage.getItem('hm_token');
+    try {
+        await fetch(`http://localhost:3000/api/notifications/${id}/read`, {
+            method: 'PUT',
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        fetchNotifications();
+    } catch (error) {
+        console.error(error);
     }
 }

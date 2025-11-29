@@ -2,6 +2,8 @@ const User = require('../models/User');
 const Symptom = require('../models/Symptom');
 const Appointment = require('../models/Appointment');
 const Message = require('../models/Message');
+const Insurance = require('../models/Insurance');
+const Notification = require('../models/Notification');
 
 exports.getAllPatients = async (req, res) => {
   try {
@@ -70,6 +72,11 @@ exports.replyToMessage = async (req, res) => {
 
     await newMessage.save();
     res.status(201).json({ message: 'Reply sent successfully.' });
+    await new Notification({
+    recipient: patientId,
+    message: `New message from Dr. ${req.user.email}`, // Or use their name if you have it
+    type: 'message'
+}).save();
   } catch (err) {
     console.error(err.message);
     res.status(500).send('Server Error');
@@ -86,30 +93,16 @@ exports.getAllDoctors = async (req, res) => {
   }
 };
 
-exports.cancelAppointment = async (req, res) => {
-  const { appointmentId } = req.params;
+exports.getPatientInsurance = async (req, res) => {
+    try {
+        console.log("🔎 Doctor looking for insurance...");
+        console.log("   Target Patient ID:", req.params.patientId);
 
-  try {
-    const appointment = await Appointment.findById(appointmentId);
-    
-    if (!appointment) {
-      return res.status(404).json({ message: 'Appointment not found.' });
+        const insurance = await Insurance.find({ patient: req.params.patientId }).sort({ createdAt: -1 });
+        console.log("   Found:", insurance.length, "policies");
+        res.json(insurance);
+    } catch (err) {
+        console.error(err.message);
+        res.status(500).send('Server Error');
     }
-
-    if (appointment.doctor.toString() !== req.user.id) {
-      return res.status(403).json({ message: 'Not authorized to cancel this appointment.' });
-    }
-
-    if (appointment.status === 'Cancelled') {
-      return res.status(400).json({ message: 'Appointment is already cancelled.' });
-    }
-
-    appointment.status = 'Cancelled';
-    await appointment.save();
-
-    res.json({ message: 'Appointment cancelled successfully.', appointment });
-  } catch (err) {
-    console.error(err.message);
-    res.status(500).send('Server Error');
-  }
 };
