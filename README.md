@@ -21,7 +21,8 @@
 <div align="center">
 
 ### Patient Dashboard
-![Patient Dashboard](./public/images/patient-dashboard.png)
+![Patient Dashboard](<img width="910" height="912" alt="image" src="https://github.com/user-attachments/assets/ebe44797-a9bf-45ec-986d-1c137016ade7" />
+)
 *Intuitive patient interface with appointment scheduling and health tracking*
 
 ### AI Symptom Analyzer
