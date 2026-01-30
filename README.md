@@ -11,6 +11,8 @@
 🔗 **Live Platform:** [https://healthme-496r.onrender.com](https://healthme-496r.onrender.com)
 
 Img: <img width="906" height="915" alt="image" src="https://github.com/user-attachments/assets/49f9f4f8-6d8e-4b34-8453-883219fd581c" />
+<img width="1067" height="816" alt="image" src="https://github.com/user-attachments/assets/4695e43c-36d2-4be4-832f-6e9899eef1e5" />
+<img width="1067" height="811" alt="image" src="https://github.com/user-attachments/assets/9737dba8-7663-4144-a4b3-2b0674cf7965" />
 
 ---
 
