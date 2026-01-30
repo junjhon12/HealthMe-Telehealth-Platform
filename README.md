@@ -10,6 +10,8 @@
 
 🔗 **Live Platform:** [https://healthme-496r.onrender.com](https://healthme-496r.onrender.com)
 
+Img: <img width="906" height="915" alt="image" src="https://github.com/user-attachments/assets/49f9f4f8-6d8e-4b34-8453-883219fd581c" />
+
 ---
 
 ## 🌟 Key Features
