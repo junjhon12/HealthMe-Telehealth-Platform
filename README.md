@@ -21,20 +21,20 @@
 <div align="center">
 
 ### Patient Dashboard
-![Patient Dashboard](<img width="910" height="912" alt="image" src="https://github.com/user-attachments/assets/ebe44797-a9bf-45ec-986d-1c137016ade7" />
-)
+![Patient Dashboard]
+<img width="910" height="912" alt="image" src="https://github.com/user-attachments/assets/0806e9f8-289e-46b2-91e2-4ea35eb06f65" />
 *Intuitive patient interface with appointment scheduling and health tracking*
 
 ### AI Symptom Analyzer
-![AI Symptom Analysis](./public/images/ai-symptom-analyzer.png)
+<img width="913" height="923" alt="image" src="https://github.com/user-attachments/assets/f92d72e4-8f32-462e-9030-81ce79b3af25" />
 *OpenAI-powered symptom analysis providing preliminary health insights*
 
 ### Video Consultation
-![Video Consultation](./public/images/video-consultation.png)
+<img width="909" height="923" alt="image" src="https://github.com/user-attachments/assets/be93979f-7c59-4b34-b7d3-19c483a3a23d" />
 *HIPAA-compliant video consultations powered by Twilio*
 
 ### Doctor Portal
-![Doctor Portal](./public/images/doctor-portal.png)
+<img width="910" height="907" alt="image" src="https://github.com/user-attachments/assets/3182dce6-5aa0-489e-8bef-dcec5f50e186" />
 *Comprehensive patient management and appointment scheduling*
 
 </div>
